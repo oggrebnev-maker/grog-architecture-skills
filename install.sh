@@ -27,14 +27,14 @@ if command -v claude >/dev/null; then
     claude plugin marketplace add "$m" >/dev/null 2>&1 || true
   done
   claude plugin marketplace update >/dev/null 2>&1 || true
-  for p in architecture@grog-architecture-skills design-transfer@grog-architecture-skills superpowers@superpowers-marketplace claude-md-management@claude-plugins-official caveman@caveman; do
+  for p in architecture@grog-architecture-skills owner-skills@grog-architecture-skills superpowers@superpowers-marketplace claude-md-management@claude-plugins-official caveman@caveman; do
     if claude plugin list 2>/dev/null | grep -q "${p%@*}@${p#*@}"; then echo "есть: $p"
     else claude plugin install "$p" --scope user >/dev/null 2>&1 && echo "установлен: $p" || warn "не установился плагин $p"; fi
   done
 fi
 
 step "Playwright для design-transfer"
-bash "$HERE/plugins/design-transfer/skills/design-transfer/setup.sh" >/dev/null 2>&1 && echo "Playwright и Chromium в ~/.local/share/design-transfer" || warn "не установился Playwright: bash $HERE/plugins/design-transfer/skills/design-transfer/setup.sh"
+bash "$HERE/skills/design-transfer/setup.sh" >/dev/null 2>&1 && echo "Playwright и Chromium в ~/.local/share/design-transfer" || warn "не установился Playwright: bash $HERE/skills/design-transfer/setup.sh"
 
 step "Навыки (установщик skills)"
 npx -y skills add firecrawl/skills -g --all >/dev/null 2>&1 && echo "навыки firecrawl" || warn "не установились навыки firecrawl/skills"

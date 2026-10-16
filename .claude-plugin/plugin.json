@@ -1,0 +1,7 @@
+{
+  "name": "owner-skills",
+  "description": "Навыки владельца: каждая папка skills/<имя>/ с SKILL.md — отдельный навык. Без номера версии: каждый коммит — обновление",
+  "author": { "name": "oggrebnev-maker" },
+  "repository": "https://github.com/oggrebnev-maker/grog-architecture-skills",
+  "license": "MIT"
+}

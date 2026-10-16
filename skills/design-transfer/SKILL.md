@@ -139,14 +139,12 @@ node $S/img.mjs crop mock.png x y w h out.png 2 # увеличить фрагм�
 
 ## Установка в другой проект или на другой компьютер
 
-- Навык — плагин `design-transfer` маркетплейса `grog-architecture-skills`. Сервер: `bash install.sh` из клона репозитория (ставит плагин выключенным и Playwright).
-- Проект с интерфейсом: в `.claude/settings.json` проекта — `"design-transfer@grog-architecture-skills": true` в `enabledPlugins` и строка в разделе 3 `CLAUDE.md`.
+- Навык — в плагине `owner-skills` маркетплейса `grog-architecture-skills` (папка `skills/design-transfer/` репозитория). Сервер: `bash install.sh` из клона репозитория — ставит плагин и Playwright.
 - В каждом проекте: `dt.py init <пакет>` → поправить `design-transfer.json` → дальше по «Порядку».
 - Экспорт не из Pencil: работает, если у узлов есть атрибут с именем слоя — указать его в `nameAttr`.
 
 ## Улучшение скилла (правило владельца)
 
 Нашёл ошибку скрипта, ловушку экспорта, ручной замер, который мог бы делать скрипт, или лучший шаг процесса —
-сразу, без вопроса, дописать это в сам навык — в клоне `grog-architecture-skills` (`plugins/design-transfer/skills/design-transfer/`),
-а не в установленной копии плагина. Проверить, что скрипты работают; версия +1 в `plugins/design-transfer/.claude-plugin/plugin.json`,
-строка в `CHANGELOG.md`, push, `claude plugin update design-transfer@grog-architecture-skills`. Сообщить владельцу одной-двумя строками, что добавлено.
+сразу, без вопроса, дописать это в сам навык — в клоне `grog-architecture-skills` (`skills/design-transfer/`),
+а не в установленной копии плагина. Проверить, что скрипты работают; push, `claude plugin update owner-skills@grog-architecture-skills`. Сообщить владельцу одной-двумя строками, что добавлено.

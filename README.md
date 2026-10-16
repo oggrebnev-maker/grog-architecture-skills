@@ -9,7 +9,7 @@ git clone https://github.com/oggrebnev-maker/grog-architecture-skills
 bash grog-architecture-skills/install.sh
 ```
 
-Скрипт ставит плагины (`architecture`, `design-transfer` — выключенным, `superpowers`, `claude-md-management`, `caveman`), навыки Firecrawl и find-skills, Firecrawl CLI, общие правила владельца в `~/.claude/CLAUDE.md` и запреты чтения секретов. Повторный запуск безопасен.
+Скрипт ставит плагины (`architecture`, `owner-skills`, `superpowers`, `claude-md-management`, `caveman`), навыки Firecrawl и find-skills, Firecrawl CLI, общие правила владельца в `~/.claude/CLAUDE.md` и запреты чтения секретов. Повторный запуск безопасен.
 
 ## В проекте
 
@@ -26,7 +26,15 @@ bash grog-architecture-skills/install.sh
 | `plugins/architecture/skills/architecture/user_claude.md` | общие правила владельца |
 | `plugins/architecture/agents/` | `reuse-scout`, `manual-keeper` |
 | `plugins/architecture/hooks/` | `guard-env` — не даёт читать секреты |
-| `plugins/design-transfer/` | навык переноса макетов дизайнера в код один в один; включать в проектах с интерфейсом |
+| `skills/` | ваши навыки (плагин `owner-skills`): `design-transfer` и следующие |
+
+## Добавить свой навык
+
+1. Положить папку навыка в `skills/<имя>/` — внутри `SKILL.md` с шапкой `name` и `description` (когда вызывать). Можно через сайт GitHub: Add file → Upload files, путь `skills/<имя>/`.
+2. Сохранить (commit) в `main`. Номер версии не нужен: каждый коммит в `owner-skills` — обновление.
+3. На серверах: `claude plugin update owner-skills@grog-architecture-skills` или `bash install.sh`, затем перезапустить Claude Code.
+
+Если навыку нужны программы — `setup.sh` в его папке; `install.sh` его не знает, запустить `bash skills/<имя>/setup.sh` или попросить Claude дописать его в `install.sh`.
 
 ## Обновление эталона
 

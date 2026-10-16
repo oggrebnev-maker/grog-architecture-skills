@@ -11,9 +11,9 @@
       "description": "Навык architecture (эталон и проверка check.py), агенты reuse-scout и manual-keeper, хук guard-env"
     },
     {
-      "name": "design-transfer",
-      "source": "./plugins/design-transfer",
-      "description": "Перенос макетов дизайнера в код один в один; включать в проектах с интерфейсом"
+      "name": "owner-skills",
+      "source": "./",
+      "description": "Навыки владельца из папки skills/ репозитория (design-transfer и следующие)"
     }
   ]
 }
