@@ -1,0 +1,9 @@
+{
+  "name": "design-transfer",
+  "version": "1.0.0",
+  "description": "Перенос макетов дизайнера (HTML-экспорт Pencil + PNG) в код один в один: генератор CSS и браузерная сверка скриптами",
+  "author": { "name": "oggrebnev-maker" },
+  "repository": "https://github.com/oggrebnev-maker/grog-architecture-skills",
+  "license": "MIT",
+  "defaultEnabled": false
+}

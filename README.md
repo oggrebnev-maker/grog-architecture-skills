@@ -9,7 +9,7 @@ git clone https://github.com/oggrebnev-maker/grog-architecture-skills
 bash grog-architecture-skills/install.sh
 ```
 
-Скрипт ставит плагины (`architecture`, `superpowers`, `claude-md-management`, `caveman`), навыки Firecrawl и find-skills, Firecrawl CLI, общие правила владельца в `~/.claude/CLAUDE.md` и запреты чтения секретов. Повторный запуск безопасен.
+Скрипт ставит плагины (`architecture`, `design-transfer` — выключенным, `superpowers`, `claude-md-management`, `caveman`), навыки Firecrawl и find-skills, Firecrawl CLI, общие правила владельца в `~/.claude/CLAUDE.md` и запреты чтения секретов. Повторный запуск безопасен.
 
 ## В проекте
 
@@ -26,6 +26,7 @@ bash grog-architecture-skills/install.sh
 | `plugins/architecture/skills/architecture/user_claude.md` | общие правила владельца |
 | `plugins/architecture/agents/` | `reuse-scout`, `manual-keeper` |
 | `plugins/architecture/hooks/` | `guard-env` — не даёт читать секреты |
+| `plugins/design-transfer/` | навык переноса макетов дизайнера в код один в один; включать в проектах с интерфейсом |
 
 ## Обновление эталона
 

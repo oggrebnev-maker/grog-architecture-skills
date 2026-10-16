@@ -1,5 +1,17 @@
 // Shared helpers of the browser checks: config, browser, image comparison in a canvas (no extra deps).
-import { chromium } from 'playwright';
+import { createRequire } from 'node:module';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+// Playwright lives outside the plugin folder (it is replaced on every plugin update): setup.sh installs it here.
+export const DT_HOME = process.env.DESIGN_TRANSFER_HOME ?? join(homedir(), '.local/share/design-transfer');
+function loadPlaywright() {
+  for (const base of [DT_HOME, fileURLToPath(new URL('..', import.meta.url))]) {
+    try { return createRequire(join(base, 'package.json'))('playwright'); } catch {}
+  }
+  throw new Error(`Playwright не установлен: bash <папка навыка>/setup.sh (ставит в ${DT_HOME})`);
+}
+const { chromium } = loadPlaywright();
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 

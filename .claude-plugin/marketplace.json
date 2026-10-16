@@ -1,12 +1,19 @@
 {
   "name": "grog-architecture-skills",
-  "owner": { "name": "oggrebnev-maker" },
+  "owner": {
+    "name": "oggrebnev-maker"
+  },
   "description": "Эталон устройства проектов владельца для Claude Code: навык architecture, общие агенты, защита секретов",
   "plugins": [
     {
       "name": "architecture",
       "source": "./plugins/architecture",
       "description": "Навык architecture (эталон и проверка check.py), агенты reuse-scout и manual-keeper, хук guard-env"
+    },
+    {
+      "name": "design-transfer",
+      "source": "./plugins/design-transfer",
+      "description": "Перенос макетов дизайнера в код один в один; включать в проектах с интерфейсом"
     }
   ]
 }

@@ -9,8 +9,8 @@ description: Перенос макетов дизайнера (HTML-экспор
 семантическую разметку и то, что генератор не выражает (резина между ширинами, состояния). Ни один
 размер, цвет, шрифт, отступ не печатается руками и не подбирается «на глаз».
 
-Скрипты — в папке скилла: `S=~/.claude/skills/design-transfer/scripts`.
-Один раз на машину: `bash ~/.claude/skills/design-transfer/setup.sh` (Playwright + Chromium, бесплатно).
+Скрипты — в папке этого навыка (её путь Claude Code показывает при загрузке навыка): `S=<папка навыка>/scripts`.
+Один раз на машину: `bash <папка навыка>/setup.sh` — ставит Playwright и Chromium в `~/.local/share/design-transfer/` (бесплатно); `install.sh` из `grog-architecture-skills` делает это сам.
 
 ## Запреты
 
@@ -139,15 +139,14 @@ node $S/img.mjs crop mock.png x y w h out.png 2 # увеличить фрагм�
 
 ## Установка в другой проект или на другой компьютер
 
-- Этот компьютер: скилл лежит в `~/.claude/skills/design-transfer/` и уже виден во всех проектах.
-- Другой компьютер: скопировать папку `design-transfer` (без `node_modules`) в `~/.claude/skills/`
-  или в `.claude/skills/` проекта, затем `bash setup.sh`. Нужны Python 3.8+ и Node 18+; всё бесплатно.
+- Навык — плагин `design-transfer` маркетплейса `grog-architecture-skills`. Сервер: `bash install.sh` из клона репозитория (ставит плагин выключенным и Playwright).
+- Проект с интерфейсом: в `.claude/settings.json` проекта — `"design-transfer@grog-architecture-skills": true` в `enabledPlugins` и строка в разделе 3 `CLAUDE.md`.
 - В каждом проекте: `dt.py init <пакет>` → поправить `design-transfer.json` → дальше по «Порядку».
 - Экспорт не из Pencil: работает, если у узлов есть атрибут с именем слоя — указать его в `nameAttr`.
 
 ## Улучшение скилла (правило владельца)
 
 Нашёл ошибку скрипта, ловушку экспорта, ручной замер, который мог бы делать скрипт, или лучший шаг процесса —
-сразу, без вопроса, дописать это в сам скилл (`SKILL.md` и/или `scripts/`), а не только в проект.
-Проверить, что скрипты работают. Если рядом с проектом лежит архив скилла для владельца — пересобрать его
-(без `node_modules`, `__pycache__`, `package-lock.json`). Сообщить владельцу одной-двумя строками, что добавлено.
+сразу, без вопроса, дописать это в сам навык — в клоне `grog-architecture-skills` (`plugins/design-transfer/skills/design-transfer/`),
+а не в установленной копии плагина. Проверить, что скрипты работают; версия +1 в `plugins/design-transfer/.claude-plugin/plugin.json`,
+строка в `CHANGELOG.md`, push, `claude plugin update design-transfer@grog-architecture-skills`. Сообщить владельцу одной-двумя строками, что добавлено.

@@ -174,7 +174,8 @@
 1. `.claude/settings.json` проекта объявляет маркетплейсы (`extraKnownMarketplaces`) и включённые плагины (`enabledPlugins`); образец — `templates/project-settings.json`. Обязателен `architecture@grog-architecture-skills`.
 2. Открыв проект и подтвердив доверие к папке, Claude Code регистрирует маркетплейсы и сообщает о не установленных плагинах; установка — `claude plugin install <плагин>@<маркетплейс>` или `bash install.sh`.
 3. Раздел 3 `CLAUDE.md` — таблица этих плагинов: откуда, что делает, когда применять. `check.py` сверяет её с `enabledPlugins` и проверяет, что маркетплейс каждого плагина объявлен.
-4. Навыки проекта, не оформленные плагином, — `.claude/skills/` проекта; общие навыки владельца ставит `install.sh` (раздел 17).
+4. Плагин, который нужен не каждому проекту (например `design-transfer` — только с интерфейсом), ставится выключенным (`defaultEnabled: false`) и включается строкой в `enabledPlugins` проекта.
+5. Навыки проекта, не оформленные плагином, — `.claude/skills/` проекта; общие навыки владельца ставит `install.sh` (раздел 17).
 
 ## 10. `prompts/`
 
@@ -229,6 +230,7 @@
 | Что | Откуда | Зачем |
 |---|---|---|
 | плагин `architecture` | `oggrebnev-maker/grog-architecture-skills` | этот эталон, `check.py`, агенты `reuse-scout`, `manual-keeper`, хук `guard-env` |
+| плагин `design-transfer` (выключен) | `oggrebnev-maker/grog-architecture-skills` | перенос макетов дизайнера в код один в один; включать в проектах с интерфейсом |
 | плагин `superpowers` | `obra/superpowers-marketplace` | процесс разработки: brainstorming, план, TDD, отладка, ревью |
 | плагин `claude-md-management` | `anthropics/claude-plugins-official` | `/revise-claude-md` |
 | плагин `caveman` | `JuliusBrussee/caveman` | краткий стиль ответов |
