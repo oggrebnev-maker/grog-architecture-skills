@@ -17,7 +17,7 @@ description: Use when the owner asks to set up, check, audit or bring a project 
 
 ## Настройки Claude меняет владелец
 
-Claude Code блокирует попытки Claude менять свои настройки: `~/.claude/*`, `.claude/settings*.json` проекта, установку плагинов. Обходить нельзя; разрешение в чате защита не засчитывает. Вместо этого — строка владельцу, начинающаяся с `!` (её запускает он сам):
+Claude Code блокирует попытки Claude менять свои настройки: `~/.claude/*`, `.claude/settings*.json` проекта, установку плагинов. Снимают блок: исключение для скриптов этого репозитория, которое `install.sh` записывает в `~/.claude/settings.json`, или сообщение владельца, где названы конкретные изменения (фраза — README репозитория, раздел «Установка»). Скрипты запускать: `bash ~/grog-architecture-skills/bootstrap.sh` из папки проекта. Защита всё равно отказала — не обходить, а дать строку владельцу, начинающуюся с `!` (её запускает он сам):
 - сервер и проект целиком: `! bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)`;
 - только настройки проекта: `! bash ~/grog-architecture-skills/project.sh .`.
 Затем — попросить перезапустить Claude Code.

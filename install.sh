@@ -68,22 +68,8 @@ else
   echo "-- отличаются: новая версия в ~/.claude/CLAUDE.md.grog-new — сравнить и перенести"
 fi
 
-step "Запреты чтения секретов (~/.claude/settings.json)"
-python3 - "$HOME/.claude/settings.json" <<'PY'
-import json, sys, pathlib
-p = pathlib.Path(sys.argv[1]); home = str(pathlib.Path.home())
-data = json.loads(p.read_text()) if p.exists() and p.read_text().strip() else {}
-deny = data.setdefault('permissions', {}).setdefault('deny', [])
-names = ['.env', '.env.local', '.env.development', '.env.production', '.env.test', '.envrc']
-added = 0
-for verb in ('Read', 'Edit'):
-    for n in names:
-        rule = f'{verb}(/{home}/**/{n})'
-        if rule not in deny:
-            deny.append(rule); added += 1
-p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
-print(f'добавлено правил: {added}')
-PY
+step "Личные настройки Claude (~/.claude/settings.json)"
+python3 -B "$HERE/lib/user_settings.py" "$HOME/.claude/settings.json" "$HERE" || warn "не записались личные настройки"
 
 step "Проверка"
 python3 -B "$SKILL/scripts/check.py" "$PWD" 2>/dev/null | grep -E '^(FAIL|WARN) .*\[~\]|^Итого|^Эталон' || true

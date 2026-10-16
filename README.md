@@ -2,26 +2,28 @@
 
 Эталон устройства проектов для Claude Code и всё, что к нему нужно, одним маркетплейсом плагинов.
 
-## Для Claude: «загрузи и примени»
+## Установка
 
-Claude Code не даёт Claude менять собственные настройки (плагины, разрешения, правила для всех проектов) — защита автоматического режима, обходить её нельзя. Поэтому установку запускает владелец одной строкой, а Claude делает остальное.
+**Обычным сообщением Claude** (в папке проекта):
 
-1. Попросить владельца выполнить в папке проекта — в терминале или прямо в чате Claude Code, начав строку с `!` (так команду запускает сам владелец):
-   ```
-   ! bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)
-   ```
-   Строка скачивает или обновляет репозиторий в `~/grog-architecture-skills`, ставит всё по `manifest.json` (`install.sh`) и приводит настройки текущего проекта (`project.sh`). Ничего не удаляет; лишнее называет.
-2. По выводу: строки `!!` — что нужно сделать вручную (например `sudo apt-get install jq`, `firecrawl login`); `~/.claude/CLAUDE.md.grog-new` — сравнить с `~/.claude/CLAUDE.md` и перенести правила эталона.
-3. Попросить владельца перезапустить Claude Code — плагины включаются после перезапуска.
-4. После перезапуска — навык `architecture`: «приведи проект в соответствие». Сам Claude правит файлы проекта, кроме `.claude/settings*.json`; изменения настроек — снова строкой для владельца: `! bash ~/grog-architecture-skills/project.sh .`.
+> Загрузи и примени https://github.com/oggrebnev-maker/grog-architecture-skills — разрешаю запустить его bootstrap.sh: он ставит плагины из manifest.json и меняет настройки Claude (~/.claude/settings.json, ~/.claude/CLAUDE.md, .claude/settings.json проекта).
 
-## Установка вручную (терминал)
+**Командой** (терминал, или в чате Claude Code с `!` в начале строки):
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)
 ```
 
+Строка скачивает или обновляет репозиторий в `~/grog-architecture-skills`, ставит всё по `manifest.json` (`install.sh`), приводит настройки текущего проекта (`project.sh`) и записывает в `~/.claude/settings.json` исключение автоматического режима для скриптов этого репозитория — после первой установки обновлять можно короткой фразой «обнови и примени grog-architecture-skills». Ничего не удаляет; лишнее называет. Затем — перезапустить Claude Code.
+
 Отдельно: только сервер — `bash ~/grog-architecture-skills/install.sh`; только проект — `bash ~/grog-architecture-skills/project.sh <папка проекта>`.
+
+## Для Claude: как выполнить «загрузи и примени»
+
+1. Есть `~/grog-architecture-skills` — `bash ~/grog-architecture-skills/bootstrap.sh`; нет — `bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)`. Запускать из папки проекта.
+2. Защита автоматического режима не дала запустить (настройки Claude меняет только владелец) — не обходить: дать владельцу строку `! bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)` и фразу из раздела «Установка» на будущее.
+3. По выводу: строки `!!` — что сделать вручную (`sudo apt-get install jq`, `firecrawl login`); `~/.claude/CLAUDE.md.grog-new` — сравнить с `~/.claude/CLAUDE.md`, правила эталона перенести.
+4. Попросить владельца перезапустить Claude Code; после — навык `architecture`: «приведи проект в соответствие».
 
 Что ставится и зачем — `plugins/architecture/skills/architecture/manifest.json`: плагины (эталон, навыки владельца, superpowers, caveman, skill-creator, pr-review-toolkit, typescript-lsp, security-guidance, playwright, hookify, claude-md-management), навыки (Firecrawl, find-skills, research-first), программы (Firecrawl CLI, TypeScript language server), общие правила владельца, запреты чтения секретов. Добавить сторонний инструмент — строка в `manifest.json`, затем `bash install.sh`.
 
