@@ -1,0 +1,13 @@
+# секреты: значения — только в .env*, имена — в .env.example
+.env
+.env.*
+!.env.example
+.envrc
+# личные настройки Claude Code
+CLAUDE.local.md
+.claude/settings.local.json
+# служебное
+node_modules/
+dist/
+__pycache__/
+.firecrawl/

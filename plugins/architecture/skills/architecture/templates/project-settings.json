@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": ["Read(./node_modules/**)", "Read(./dist/**)", "Read(./docs/archive/**)"]
+  },
+  "extraKnownMarketplaces": {
+    "grog-architecture-skills": { "source": { "source": "github", "repo": "oggrebnev-maker/grog-architecture-skills" } },
+    "superpowers-marketplace": { "source": { "source": "github", "repo": "obra/superpowers-marketplace" } },
+    "caveman": { "source": { "source": "github", "repo": "JuliusBrussee/caveman" } }
+  },
+  "enabledPlugins": {
+    "architecture@grog-architecture-skills": true,
+    "superpowers@superpowers-marketplace": true,
+    "claude-md-management@claude-plugins-official": true,
+    "caveman@caveman": true
+  }
+}
