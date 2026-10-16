@@ -166,7 +166,7 @@ def check_unit(root: Path, where: str, is_extension: bool) -> list:
         market = pid.split('@', 1)[1] if '@' in pid else ''
         if on and market and market not in markets and market not in BUILTIN_MARKETS:
             problems.append(f'маркетплейс {market} для {pid} не объявлен в extraKnownMarketplaces')
-    add('FAIL' if problems else 'OK', 'plugins', '; '.join(problems) if problems else 'плагины и маркетплейсы объявлены')
+    add('FAIL' if problems else 'OK', 'plugins', ('; '.join(problems) + ' — владельцу: ! bash ~/grog-architecture-skills/project.sh .') if problems else 'плагины и маркетплейсы объявлены')
     undocumented = [pid for pid, on in plugins.items() if on and pid.split('@')[0] not in text]
     add('FAIL' if undocumented else 'OK', 'tools-table',
         ('плагины не описаны в разделе 3 CLAUDE.md: ' + ', '.join(undocumented)) if undocumented else 'все плагины проекта описаны в CLAUDE.md')
@@ -226,7 +226,7 @@ def check_user(home: Path) -> list:
     enabled = settings.get('enabledPlugins') or {}
     missing = [p for p in wanted if not enabled.get(p)]
     out.append(Result('FAIL' if missing else 'OK', 'user-plugin', '~',
-                      ('не установлены или выключены: ' + ', '.join(missing) + ' — bash install.sh из grog-architecture-skills') if missing else f'плагины из manifest.json включены ({len(wanted)})'))
+                      ('не установлены или выключены: ' + ', '.join(missing) + ' — владельцу: ! bash ~/grog-architecture-skills/install.sh') if missing else f'плагины из manifest.json включены ({len(wanted)})'))
     out.append(Result('OK' if shutil.which('jq') else 'FAIL', 'jq', '~', 'jq ' + ('есть' if shutil.which('jq') else 'нет — без него хук guard-env блокирует все команды')))
     try:
         status = subprocess.run(['firecrawl', '--status'], capture_output=True, text=True, timeout=30).stdout

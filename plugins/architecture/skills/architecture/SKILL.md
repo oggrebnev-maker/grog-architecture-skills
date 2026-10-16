@@ -15,13 +15,20 @@ description: Use when the owner asks to set up, check, audit or bring a project 
 4. **Проверка после.** Снова `check.py`: FAIL 0; WARN — исправить или объяснить. Затем пункты раздела 18, которые скрипт не видит.
 5. **Отчёт владельцу**: что смотреть, вывод `check.py` до/после, что не сделано и почему, «Ждёт решения» списком; вопрос — один.
 
+## Настройки Claude меняет владелец
+
+Claude Code блокирует попытки Claude менять свои настройки: `~/.claude/*`, `.claude/settings*.json` проекта, установку плагинов. Обходить нельзя; разрешение в чате защита не засчитывает. Вместо этого — строка владельцу, начинающаяся с `!` (её запускает он сам):
+- сервер и проект целиком: `! bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)`;
+- только настройки проекта: `! bash ~/grog-architecture-skills/project.sh .`.
+Затем — попросить перезапустить Claude Code.
+
 ## Перед записью в CLAUDE.md или AGENTS.md
 
 `ls -la CLAUDE.md AGENTS.md`. Символьная ссылка — сначала `rm`, потом писать обычный файл: запись через ссылку затирает файл, на который она указывает.
 
 ## Уровень пользователя
 
-`check.py` без `--no-user` проверяет `~/.claude/CLAUDE.md`, плагин `architecture`, `jq`, Firecrawl. Не хватает — `bash install.sh` из клона `grog-architecture-skills` (раздел 17). `~/.claude` действует во всех проектах: менять — с разрешения владельца.
+`check.py` без `--no-user` проверяет `~/.claude/CLAUDE.md`, плагин `architecture`, `jq`, Firecrawl. Не хватает — строка владельцу `! bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)` (раздел 17). `~/.claude` действует во всех проектах: менять — с разрешения владельца.
 
 ## Соблазны
 

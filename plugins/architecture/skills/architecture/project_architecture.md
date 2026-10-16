@@ -36,9 +36,9 @@
 Проверка до и после — `python3 -B <папка навыка>/scripts/check.py <проект>`.
 
 **А. Новый проект**
-1. Нет git — `git init`. Инструменты установлены (раздел 17): иначе `bash install.sh` из `grog-architecture-skills`.
+1. Нет git — `git init`. Инструменты и настройки — строкой владельцу `! bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)` (раздел 17): Claude свои настройки не меняет.
 2. Спросить владельца о продукте (раздел 2), заполнить `context/product.md`.
-3. Создать обязательное (раздел 4) из `templates/`: `.claude/settings.json` ← `project-settings.json`, `.gitignore` ← `gitignore.txt`, `scripts/env-names.sh`; `CLAUDE.md` по шаблону раздела 5.
+3. Создать обязательное (раздел 4); `.claude/settings.json`, `.gitignore` и `scripts/env-names.sh` делает `project.sh` (запускает владелец); `CLAUDE.md` по шаблону раздела 5.
 4. `check.py` — FAIL 0. Отчёт владельцу.
 
 **Б. Существующий проект**
@@ -224,6 +224,9 @@
 `.github/workflows/check.yml`: на каждый push — тесты проекта и `python3 -B check.py . --no-user` (скрипт — из клона `grog-architecture-skills` нужной версии). Добавлять, когда в проекте работают больше одного человека или чата.
 
 ## 17. Инструменты и установка
+
+**Запускает владелец.** Claude Code не даёт Claude менять свои настройки (плагины, разрешения, `~/.claude`, `.claude/settings*.json`) — это защита, не обходить. Claude даёт владельцу строку с `!` в начале — в чате её запускает сам владелец:
+`! bash <(curl -fsSL https://raw.githubusercontent.com/oggrebnev-maker/grog-architecture-skills/main/bootstrap.sh)` — скачать или обновить репозиторий, `install.sh` (сервер по `manifest.json`), `project.sh` (настройки проекта в текущей папке). Только проект: `! bash ~/grog-architecture-skills/project.sh .`. После — перезапуск Claude Code.
 
 Список всего, что ставится на сервер, — `manifest.json` в папке этого навыка: маркетплейсы, плагины, навыки, npm-программы, скрипты настройки, известные дубли; у каждой строки — зачем. Установка и приведение в соответствие — `bash install.sh` из клона `grog-architecture-skills` (повторяемо: ставит недостающее, обновляет, лишнее только называет). `check.py` проверяет, что все плагины списка включены.
 
