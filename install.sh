@@ -15,6 +15,7 @@ step "Обновление репозитория"
 git -C "$HERE" pull -q --ff-only 2>/dev/null && echo "актуальная версия" || echo "-- git pull не выполнен (нет сети или локальные правки) — ставлю текущую версию"
 
 step "Программы"
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH"; echo "-- добавить в PATH: $HOME/.local/bin (строка export PATH=\"\$HOME/.local/bin:\$PATH\" в ~/.bashrc)";; esac
 for tool in git node npm npx python3 claude; do
   command -v "$tool" >/dev/null || warn "нет $tool — установить и запустить install.sh снова"
 done
@@ -25,27 +26,27 @@ fi
 while read -r pkg; do
   bin=$(python3 -c "import json,sys; print(next(x['bin'] for x in json.load(open(sys.argv[1]))['npm'] if x['package']==sys.argv[2]))" "$MANIFEST" "$pkg")
   if command -v "$bin" >/dev/null; then echo "есть: $pkg"
-  else npm install -g "$pkg" >/dev/null 2>&1 && echo "установлен: $pkg" || warn "не установился npm-пакет $pkg"; fi
+  else npm install -g --prefix "$HOME/.local" "$pkg" </dev/null >/dev/null 2>&1 && echo "установлен: $pkg" || warn "не установился npm-пакет $pkg"; fi
 done < <(list npm package)
 firecrawl --status 2>/dev/null | grep -q Authenticated || echo "-- Firecrawl: выполнить вход — firecrawl login"
 
 step "Маркетплейсы и плагины Claude Code"
 if command -v claude >/dev/null; then
-  while read -r repo; do claude plugin marketplace add "$repo" >/dev/null 2>&1 || true; done < <(list marketplaces repo)
+  while read -r repo; do claude plugin marketplace add "$repo" </dev/null >/dev/null 2>&1 || true; done < <(list marketplaces repo)
   claude plugin marketplace update >/dev/null 2>&1 || true
   installed=$(claude plugin list 2>/dev/null)
   while read -r p; do
     if grep -q "$p" <<<"$installed"; then
-      claude plugin update "$p" >/dev/null 2>&1; echo "есть: $p"
+      claude plugin update "$p" </dev/null >/dev/null 2>&1; echo "есть: $p"
     else
-      claude plugin install "$p" --scope user >/dev/null 2>&1 && echo "установлен: $p" || warn "не установился плагин $p"
+      claude plugin install "$p" --scope user </dev/null >/dev/null 2>&1 && echo "установлен: $p" || warn "не установился плагин $p"
     fi
   done < <(list plugins id)
 fi
 
 step "Навыки (установщик skills)"
 while read -r repo; do
-  npx -y skills add "$repo" -g --all >/dev/null 2>&1 && echo "есть: $repo" || warn "не установились навыки $repo"
+  npx -y skills add "$repo" -g --all </dev/null >/dev/null 2>&1 && echo "есть: $repo" || warn "не установились навыки $repo"
 done < <(list skills repo)
 while read -r dup; do
   [ -e "$HOME/.claude/skills/$dup" ] && echo "-- лишнее: навык $dup дублирует плагин; убрать: npx skills remove $dup -g"
@@ -53,7 +54,7 @@ done < <(list duplicates skill)
 
 step "Настройка навыков"
 while read -r script; do
-  bash "$HERE/$script" >/dev/null 2>&1 && echo "готово: $script" || warn "не выполнился $script"
+  bash "$HERE/$script" </dev/null >/dev/null 2>&1 && echo "готово: $script" || warn "не выполнился $script"
 done < <(list setup script)
 
 step "Общие правила владельца (~/.claude/CLAUDE.md)"

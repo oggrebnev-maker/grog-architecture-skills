@@ -1,6 +1,6 @@
 {
   "name": "architecture",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Эталон устройства проекта: навык architecture с проверкой check.py, агенты reuse-scout и manual-keeper, хук guard-env против чтения секретов",
   "author": { "name": "oggrebnev-maker" },
   "repository": "https://github.com/oggrebnev-maker/grog-architecture-skills",
