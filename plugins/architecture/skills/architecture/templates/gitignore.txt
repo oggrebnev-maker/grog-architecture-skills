@@ -5,7 +5,7 @@
 .envrc
 # личные настройки Claude Code
 CLAUDE.local.md
-.claude/settings.local.json
+**/.claude/settings.local.json
 # служебное
 node_modules/
 dist/

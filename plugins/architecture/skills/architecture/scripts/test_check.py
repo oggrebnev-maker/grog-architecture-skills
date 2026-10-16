@@ -162,6 +162,17 @@ class CheckTest(unittest.TestCase):
         self.append('.claude/rules/git.md', '- Справочник `docs/manual/MANUAL.md` создаётся по команде; шаблон `docs/P##_NAME.md`.\n')
         self.assertEqual(verdicts(self.root)['paths'], 'OK')
 
+    def test_extension_local_settings_need_recursive_ignore(self):
+        write_unit(self.root)
+        ext = self.root / 'add-ons' / 'x'
+        ext.mkdir(parents=True)
+        write_unit(ext, with_git=False)
+        (ext / '.gitignore').unlink()
+        self.assertEqual(verdicts(self.root, 'add-ons/x')['local-files'], 'FAIL')
+        template = (Path(check.__file__).parent.parent / 'templates' / 'gitignore.txt').read_text()
+        (self.root / '.gitignore').write_text(template)
+        self.assertEqual(verdicts(self.root, 'add-ons/x')['local-files'], 'OK')
+
     def test_claudeignore_fails(self):
         write_unit(self.root)
         (self.root / '.claudeignore').write_text('dist\n')
