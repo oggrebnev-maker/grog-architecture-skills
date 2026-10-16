@@ -157,6 +157,11 @@ class CheckTest(unittest.TestCase):
         self.append('CLAUDE.md', 'Шаблон `docs/<имя>.md`, все `src/**/*.ts`, сайт `https://x.ru/a.md`, команда `npm run build`.\n')
         self.assertEqual(verdicts(self.root)['paths'], 'OK')
 
+    def test_output_files_marked_as_created_are_not_broken(self):
+        write_unit(self.root)
+        self.append('.claude/rules/git.md', '- Справочник `docs/manual/MANUAL.md` создаётся по команде; шаблон `docs/P##_NAME.md`.\n')
+        self.assertEqual(verdicts(self.root)['paths'], 'OK')
+
     def test_claudeignore_fails(self):
         write_unit(self.root)
         (self.root / '.claudeignore').write_text('dist\n')

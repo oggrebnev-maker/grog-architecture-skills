@@ -24,6 +24,7 @@ VAGUE = re.compile(r'старайс|по возможности|желатель
 CAPS = re.compile(r'\b(ВАЖНО|НИКОГДА|ВСЕГДА|ОБЯЗАТЕЛЬНО|MUST|NEVER|ALWAYS|CRITICAL|IMPORTANT)\b')
 CODE_BLOCK = re.compile(r'```.*?```', re.S)
 PATH_TOKEN = re.compile(r'`([^`\s]+)`')
+CREATED = re.compile(r'создаётся|создается|появится|будет создан', re.I)
 SKIP_DIRS = {'node_modules', '.git', 'dist', '.next', 'vendor', 'archive'}
 MAX_LINES, MAX_BYTES, MAX_LOG_LINES = 150, 20000, 300
 
@@ -62,7 +63,7 @@ def _named_elsewhere(root: Path, text: str, names) -> bool:
 
 
 def _looks_like_path(token: str) -> bool:
-    if any(c in token for c in '<>*{}…$|') or '://' in token or token.startswith(('~', '-', '/', '@', '.claude/rules/*')):
+    if any(c in token for c in '<>*{}…$|#') or '://' in token or token.startswith(('~', '-', '/', '@', '.claude/rules/*')):
         return False
     return '/' in token and re.search(r'\.(md|json|ts|mjs|js|py|sh|sql|yaml|yml)$', token) is not None
 
@@ -72,6 +73,7 @@ def check_paths(root: Path, files) -> list:
     broken = []
     for f in files:
         text = CODE_BLOCK.sub('', _read(f))
+        text = '\n'.join(line for line in text.splitlines() if not CREATED.search(line))
         for token in PATH_TOKEN.findall(text):
             if not _looks_like_path(token):
                 continue
