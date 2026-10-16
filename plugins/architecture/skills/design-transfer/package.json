@@ -1,0 +1,9 @@
+{
+  "name": "design-transfer-tools",
+  "private": true,
+  "type": "module",
+  "description": "Browser checks of the design-transfer skill (Playwright, Chromium).",
+  "dependencies": {
+    "playwright": "1.64.0"
+  }
+}
