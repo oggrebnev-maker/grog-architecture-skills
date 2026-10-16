@@ -225,22 +225,13 @@
 
 ## 17. Инструменты и установка
 
-Один раз на сервер: `git clone https://github.com/oggrebnev-maker/grog-architecture-skills && bash grog-architecture-skills/install.sh`. Скрипт повторяемый.
+Список всего, что ставится на сервер, — `manifest.json` в папке этого навыка: маркетплейсы, плагины, навыки, npm-программы, скрипты настройки, известные дубли; у каждой строки — зачем. Установка и приведение в соответствие — `bash install.sh` из клона `grog-architecture-skills` (повторяемо: ставит недостающее, обновляет, лишнее только называет). `check.py` проверяет, что все плагины списка включены.
 
-| Что | Откуда | Зачем |
-|---|---|---|
-| плагин `architecture` | `oggrebnev-maker/grog-architecture-skills` | этот эталон, `check.py`, агенты `reuse-scout`, `manual-keeper`, хук `guard-env` |
-| плагин `owner-skills` | `oggrebnev-maker/grog-architecture-skills`, папка `skills/` | навыки владельца (`design-transfer` — перенос макетов в код); новый навык — папка `skills/<имя>/`, без версии |
-| плагин `superpowers` | `obra/superpowers-marketplace` | процесс разработки: brainstorming, план, TDD, отладка, ревью |
-| плагин `claude-md-management` | `anthropics/claude-plugins-official` | `/revise-claude-md` |
-| плагин `caveman` | `JuliusBrussee/caveman` | краткий стиль ответов |
-| навыки `firecrawl-*` | `npx skills add firecrawl/skills -g --all` | внешние сайты |
-| навык `find-skills` | `npx skills add vercel-labs/skills -g --all` | поиск готовых навыков |
-| Firecrawl CLI | `npm i -g firecrawl-cli`, затем `firecrawl login` | внешние сайты |
-| `jq` | системный пакет | нужен хуку `guard-env` |
-| общие правила | `user_claude.md` → `~/.claude/CLAUDE.md` | правила владельца во всех проектах |
+Добавить сторонний инструмент для всех серверов — строка в `manifest.json` (с «зачем»), версия эталона +1, `CHANGELOG.md`, push, `bash install.sh`. Свой навык — папка `skills/<имя>/` репозитория (плагин `owner-skills`).
 
-Вручную после скрипта: `firecrawl login`; если `~/.claude/CLAUDE.md` отличался — сравнить с `~/.claude/CLAUDE.md.grog-new`. Внешний сервис: Claude Design (claude.ai) — экраны.
+Вручную после скрипта: `firecrawl login`; если `~/.claude/CLAUDE.md` отличался — сравнить с `~/.claude/CLAUDE.md.grog-new`; перезапустить Claude Code. Внешний сервис: Claude Design (claude.ai) — экраны.
+
+Ревью и стражи: встроенные `/code-review` и `/security-review`; агенты `pr-review-toolkit` — после каждой задачи с кодом; `security-guidance` — проверка при правках и перед коммитом; `typescript-lsp` — ошибки типов; `hookify` — повторно нарушаемое правило превратить в хук; `guard-env` — секреты.
 
 ## 18. Проверка соответствия
 

@@ -2,14 +2,24 @@
 
 Эталон устройства проектов для Claude Code и всё, что к нему нужно, одним маркетплейсом плагинов.
 
-## Установка на сервер (один раз)
+## Для Claude: «загрузи и примени»
+
+Владелец дал ссылку на этот репозиторий и сказал «загрузи и примени». Порядок:
+
+1. Клон: нет папки `~/grog-architecture-skills` — `git clone https://github.com/oggrebnev-maker/grog-architecture-skills ~/grog-architecture-skills`; есть — `git -C ~/grog-architecture-skills pull --ff-only`.
+2. `bash ~/grog-architecture-skills/install.sh` — приводит сервер в соответствие списку `plugins/architecture/skills/architecture/manifest.json`: ставит недостающее, обновляет установленное, ничего не удаляет, сообщает лишнее. Строки `!!` — выполнить вручную или сказать владельцу, что нужно от него (например `firecrawl login`, `sudo apt-get install jq`).
+3. `~/.claude/CLAUDE.md.grog-new` появился — сравнить с `~/.claude/CLAUDE.md`; правила владельца из эталона заменяют старые, личное из старого файла перенести в новый.
+4. Попросить владельца перезапустить Claude Code: плагины включаются после перезапуска.
+5. После перезапуска, в папке проекта — навык `architecture`: «приведи проект в соответствие».
+
+## Установка на сервер вручную
 
 ```bash
-git clone https://github.com/oggrebnev-maker/grog-architecture-skills
-bash grog-architecture-skills/install.sh
+git clone https://github.com/oggrebnev-maker/grog-architecture-skills ~/grog-architecture-skills
+bash ~/grog-architecture-skills/install.sh
 ```
 
-Скрипт ставит плагины (`architecture`, `owner-skills`, `superpowers`, `claude-md-management`, `caveman`), навыки Firecrawl и find-skills, Firecrawl CLI, общие правила владельца в `~/.claude/CLAUDE.md` и запреты чтения секретов. Повторный запуск безопасен.
+Что ставится и зачем — `plugins/architecture/skills/architecture/manifest.json`: плагины (эталон, навыки владельца, superpowers, caveman, skill-creator, pr-review-toolkit, typescript-lsp, security-guidance, playwright, hookify, claude-md-management), навыки (Firecrawl, find-skills, research-first), программы (Firecrawl CLI, TypeScript language server), общие правила владельца, запреты чтения секретов. Добавить сторонний инструмент — строка в `manifest.json`, затем `bash install.sh`.
 
 ## В проекте
 

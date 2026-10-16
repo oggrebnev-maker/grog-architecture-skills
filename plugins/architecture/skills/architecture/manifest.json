@@ -1,0 +1,118 @@
+{
+  "about": "Что ставится на каждый сервер владельца. install.sh приводит сервер в соответствие этому списку; check.py сверяет. Добавить инструмент — строка здесь, затем bash install.sh.",
+  "marketplaces": [
+    {
+      "name": "grog-architecture-skills",
+      "repo": "oggrebnev-maker/grog-architecture-skills",
+      "why": "эталон и навыки владельца"
+    },
+    {
+      "name": "superpowers-marketplace",
+      "repo": "obra/superpowers-marketplace",
+      "why": "superpowers от автора, свежие версии"
+    },
+    {
+      "name": "claude-plugins-official",
+      "repo": "anthropics/claude-plugins-official",
+      "why": "официальный каталог Anthropic"
+    },
+    {
+      "name": "caveman",
+      "repo": "JuliusBrussee/caveman",
+      "why": "краткий стиль ответов"
+    }
+  ],
+  "plugins": [
+    {
+      "id": "architecture@grog-architecture-skills",
+      "why": "эталон устройства проекта, check.py, агенты reuse-scout и manual-keeper, хук guard-env"
+    },
+    {
+      "id": "owner-skills@grog-architecture-skills",
+      "why": "навыки владельца из папки skills/ (design-transfer и следующие)"
+    },
+    {
+      "id": "superpowers@superpowers-marketplace",
+      "why": "процесс: brainstorming, план, TDD, отладка, ревью"
+    },
+    {
+      "id": "caveman@caveman",
+      "why": "краткий стиль ответов"
+    },
+    {
+      "id": "claude-md-management@claude-plugins-official",
+      "why": "/revise-claude-md — обновление CLAUDE.md в конце этапа"
+    },
+    {
+      "id": "pr-review-toolkit@claude-plugins-official",
+      "why": "агенты-проверяющие: проглоченные ошибки, тесты, типы, комментарии, качество и упрощение кода — после каждой задачи"
+    },
+    {
+      "id": "skill-creator@claude-plugins-official",
+      "why": "создание навыков и измерение, как они срабатывают"
+    },
+    {
+      "id": "typescript-lsp@claude-plugins-official",
+      "why": "типы и ошибки TypeScript как в редакторе"
+    },
+    {
+      "id": "security-guidance@claude-plugins-official",
+      "why": "проверка безопасности при правках и перед коммитом (расходует лимит: ревью через Opus)"
+    },
+    {
+      "id": "playwright@claude-plugins-official",
+      "why": "браузер для Claude: открыть страницу, кликнуть, снимок экрана"
+    },
+    {
+      "id": "hookify@claude-plugins-official",
+      "why": "превращает правило в автоматический запрет-хук"
+    }
+  ],
+  "skills": [
+    {
+      "repo": "firecrawl/skills",
+      "why": "внешние сайты: поиск, чтение, исследование"
+    },
+    {
+      "repo": "vercel-labs/skills",
+      "why": "find-skills — поиск готовых навыков"
+    },
+    {
+      "repo": "niveku/skill-research-first",
+      "why": "research-first — перед созданием искать готовые решения"
+    }
+  ],
+  "npm": [
+    {
+      "package": "firecrawl-cli",
+      "bin": "firecrawl",
+      "why": "команда firecrawl"
+    },
+    {
+      "package": "typescript-language-server",
+      "bin": "typescript-language-server",
+      "why": "нужен typescript-lsp"
+    },
+    {
+      "package": "typescript",
+      "bin": "tsc",
+      "why": "нужен typescript-lsp"
+    }
+  ],
+  "setup": [
+    {
+      "script": "skills/design-transfer/setup.sh",
+      "why": "Playwright и Chromium для design-transfer в ~/.local/share/design-transfer"
+    }
+  ],
+  "duplicates": [
+    {
+      "skill": "caveman",
+      "why": "навык caveman уже даёт плагин caveman@caveman"
+    },
+    {
+      "skill": "caveman-learn",
+      "why": "навык caveman-learn уже даёт плагин caveman@caveman"
+    }
+  ]
+}

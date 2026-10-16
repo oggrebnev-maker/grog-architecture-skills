@@ -1,5 +1,12 @@
 # Изменения
 
+## architecture 1.2.0 — 16.10.2026
+
+- `manifest.json` — единый список всего, что ставится на сервер, с «зачем» у каждой строки. `install.sh` приводит сервер в соответствие ему: обновляет клон, ставит недостающее, обновляет установленное, называет дубли, ничего не удаляет.
+- Новые на всех серверах: `skill-creator`, `pr-review-toolkit`, `typescript-lsp` (+ `typescript-language-server`), `security-guidance`, `playwright`, `hookify` из официального каталога Anthropic; навык `research-first` (niveku/skill-research-first).
+- `check.py` проверяет, что все плагины списка включены у пользователя.
+- README: порядок «загрузи и примени» для Claude.
+
 ## owner-skills — 16.10.2026
 
 - Папка `skills/` в корне — плагин `owner-skills` без номера версии: навык владельца добавляется папкой `skills/<имя>/SKILL.md`, каждый коммит — обновление. `design-transfer` перенесён сюда, отдельный плагин `design-transfer` убран.

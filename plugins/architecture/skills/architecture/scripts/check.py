@@ -219,8 +219,14 @@ def check_user(home: Path) -> list:
         settings = json.loads(_read(home / '.claude' / 'settings.json') or '{}')
     except json.JSONDecodeError:
         settings = {}
-    on = (settings.get('enabledPlugins') or {}).get(REQUIRED_PLUGIN)
-    out.append(Result('OK' if on else 'FAIL', 'user-plugin', '~', f'{REQUIRED_PLUGIN} ' + ('включён' if on else 'не установлен — bash install.sh из grog-architecture-skills')))
+    try:
+        wanted = [p['id'] for p in json.loads((HERE.parent / 'manifest.json').read_text(encoding='utf-8'))['plugins']]
+    except (OSError, json.JSONDecodeError, KeyError):
+        wanted = [REQUIRED_PLUGIN]
+    enabled = settings.get('enabledPlugins') or {}
+    missing = [p for p in wanted if not enabled.get(p)]
+    out.append(Result('FAIL' if missing else 'OK', 'user-plugin', '~',
+                      ('не установлены или выключены: ' + ', '.join(missing) + ' — bash install.sh из grog-architecture-skills') if missing else f'плагины из manifest.json включены ({len(wanted)})'))
     out.append(Result('OK' if shutil.which('jq') else 'FAIL', 'jq', '~', 'jq ' + ('есть' if shutil.which('jq') else 'нет — без него хук guard-env блокирует все команды')))
     try:
         status = subprocess.run(['firecrawl', '--status'], capture_output=True, text=True, timeout=30).stdout

@@ -242,9 +242,14 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(res['user-claude-md'], 'FAIL')
         self.assertEqual(res['user-plugin'], 'FAIL')
         (home / '.claude' / 'CLAUDE.md').write_text('# Общие правила владельца\n')
-        (home / '.claude' / 'settings.json').write_text(json.dumps({'enabledPlugins': {'architecture@grog-architecture-skills': True}}))
+        manifest = json.loads((Path(check.__file__).parent.parent / 'manifest.json').read_text())
+        ids = [p['id'] for p in manifest['plugins']]
+        (home / '.claude' / 'settings.json').write_text(json.dumps({'enabledPlugins': {i: True for i in ids[:-1]}}))
         res = {r.code: r.level for r in check.run(self.root, user_home=home)}
         self.assertEqual(res['user-claude-md'], 'OK')
+        self.assertEqual(res['user-plugin'], 'FAIL')
+        (home / '.claude' / 'settings.json').write_text(json.dumps({'enabledPlugins': {i: True for i in ids}}))
+        res = {r.code: r.level for r in check.run(self.root, user_home=home)}
         self.assertEqual(res['user-plugin'], 'OK')
 
     def test_cli_exit_code_and_version(self):
