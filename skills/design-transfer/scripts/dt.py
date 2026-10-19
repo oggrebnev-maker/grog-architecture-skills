@@ -116,7 +116,9 @@ class Parser(html.parser.HTMLParser):
         if tag in VOID:
             return
         a = dict(attrs)
-        node = Node(a.get(self.attr) or a.get('data-icon-name') or '', a.get('style', ''), tag, self.cur)
+        # Pencil leaves some styled nodes unnamed (the label inside a button): name them by tag so a path reaches them.
+        name = a.get(self.attr) or a.get('data-icon-name') or (tag if a.get('style') and self.cur.name else '')
+        node = Node(name, a.get('style', ''), tag, self.cur)
         node.icon = a.get('data-icon-name')
         self.cur.children.append(node)
         self.cur = node
@@ -486,9 +488,11 @@ def cmd_prepare_ref():
     out.mkdir(parents=True)
     for z in pkg.glob('*.zip'):
         zipfile.ZipFile(z).extractall(out)
-    for d in ('assets', 'images', 'renders'):
+    for d in ('assets', 'images', 'renders', 'fonts'):
         if (pkg / d).is_dir():
             shutil.copytree(pkg / d, out / d, dirs_exist_ok=True)
+    for c in pkg.glob('*.css'):  # an export with local fonts links ./fonts.css next to the pages
+        shutil.copy(c, out / c.name)
     faces = []
     for family, file in cfg.get('fonts', {}).items():
         f = Path(file)
