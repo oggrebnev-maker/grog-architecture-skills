@@ -14,13 +14,17 @@ function loadPlaywright() {
 const { chromium } = loadPlaywright();
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 export function config() {
-  if (!existsSync('design-transfer.json')) throw new Error('design-transfer.json not found: run from the project root (dt.py init)');
-  const c = JSON.parse(readFileSync('design-transfer.json', 'utf8'));
+  // DT_CONFIG: another settings file, for a second package in the same project.
+  const file = process.env.DT_CONFIG || 'design-transfer.json';
+  if (!existsSync(file)) throw new Error(`${file} not found: run from the project root (dt.py init)`);
+  const c = JSON.parse(readFileSync(file, 'utf8'));
   c.nameAttr ??= 'data-pencil-name'; c.refDir ??= '.design-transfer/ref'; c.outDir ??= '.design-transfer/out';
   c.thresholds = { sizePx: 1, diffPct: 3, ...(c.thresholds ?? {}) };
   c.sections ??= [];
+  mockFile = c.mock ?? null;
   mkdirSync(c.outDir, { recursive: true });
   return c;
 }
@@ -39,8 +43,15 @@ export async function browser() {
 }
 
 /** Opens a page ready for a stable screenshot: fonts loaded, lazy images decoded, injected CSS applied. */
+// "mock": a module whose default export (page) => Promise stubs the site's server answers (page.route),
+// for pages that show nothing without data. Applied to our pages only, not to the export.
+let mockFile = null, mockFn = null;
 export async function open(b, url, width, css = '', height = 1000) {
   const p = await b.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+  if (mockFile && !url.startsWith('file:')) {
+    mockFn ??= (await import(pathToFileURL(resolve(mockFile)).href)).default;
+    await mockFn(p);
+  }
   await p.goto(url, { waitUntil: 'networkidle' });
   if (css) await p.addStyleTag({ content: css });
   await p.evaluate(async () => {
