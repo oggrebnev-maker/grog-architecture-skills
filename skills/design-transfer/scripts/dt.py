@@ -16,16 +16,23 @@ Commands (run from the project root; settings in design-transfer.json, see `init
 
 Map: {"page": "home", "rules": [["<css selector>", "<node path>", ...flags], ...]}
   Path: export names from the section down, joined by " / "; duplicate sibling names get "#n" (1-based).
+  "." — the page frame itself (the layout row/column that holds the sections; never the map's first rule).
   Differs per width: ["sel", {"*": "path", "768": "other path"}]; missing widths are skipped.
+  "@1024:path" — take the node of another width (an element shown at this width but drawn only at that one).
+  "files": {"*": "pkg/event-states.html"} — read nodes from another export (a state board with all widths in one
+  file); paths then start at the board's top frame name.
   Flags: "img" — node is an <img>: background-* become object-fit/object-position;
-         "text" — drop fixed px width/height of a text box (equal rows come from grid/subgrid).
+         "text" — drop fixed px width/height of a text box (equal rows come from grid/subgrid);
+         "box" — text box the designer sized for more lines than the sample: px width kept, height -> min-height;
+         "paint" — state rule (":hover") from a state board: only colour, background, border colour, outline.
   Own widths: "widths": {"1920": "(min-width:1024px)", "390": "(max-width:1023px)"} — for a part drawn at fewer widths.
 """
-import html.parser, json, math, os, re, shutil, sys, unicodedata, zipfile
+import fnmatch, html.parser, json, math, os, re, shutil, sys, unicodedata, zipfile
 from pathlib import Path
 
 # DT_CONFIG: another settings file, for a second package in the same project (paths stay relative to the project root).
 CONFIG = Path(os.environ.get('DT_CONFIG') or 'design-transfer.json')
+PAINT = {'color', 'background-color', 'border-color', 'opacity'}
 VOID = {'meta', 'link', 'br', 'img', 'input', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse'}
 DROP = {'box-sizing', 'font-family'}
 
@@ -115,9 +122,11 @@ class Parser(html.parser.HTMLParser):
         self.cur = self.root
 
     def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == 'path' and a.get('fill') and self.cur.icon and 'color' not in self.cur.style:
+            self.cur.style['color'] = a['fill']  # icon colour: our inline icons paint with currentColor
         if tag in VOID:
             return
-        a = dict(attrs)
         # Pencil leaves some styled nodes unnamed (the label inside a button): name them by tag so a path reaches them.
         name = a.get(self.attr) or a.get('data-icon-name') or (tag if a.get('style') and self.cur.name else '')
         node = Node(name, a.get('style', ''), tag, self.cur)
@@ -146,17 +155,32 @@ def load(path, attr):
     return next(c for c in body.children if c.name)  # page frame
 
 
+def packages(cfg):
+    """Design packages oldest first: "package" plus "packages" (newer deliveries that add or replace pages)."""
+    return [Path(cfg['package'])] + [Path(p) for p in cfg.get('packages', [])]
+
+
 def export_file(cfg, page, width):
-    return Path(cfg['package']) / f'{page}-{width}.html'
+    name = f'{page}-{width}.html'
+    return next((p / name for p in reversed(packages(cfg)) if (p / name).exists()), Path(cfg['package']) / name)
 
 
 def default_page(cfg):
     return 'home' if 'home' in cfg.get('pages', {}) else sorted(cfg.get('pages', {'home': 0}))[0]
 
 
+def page_widths(cfg, page=None):
+    """Width -> media query of one page. "pageMedia": {"settings-*": {"1440": "(min-width:1200px)", "1024": "all"}}
+    — pages drawn at fewer widths than the site (an admin area at 1440/1024) get their own ranges; glob keys allowed."""
+    for pattern, media in cfg.get('pageMedia', {}).items():
+        if page and fnmatch.fnmatchcase(page, pattern):
+            return media
+    return cfg['widths']
+
+
 def default_width(cfg, page=None):
     # A middle width of the page itself: pages of one package may be drawn at different widths.
-    ws = sorted(map(int, (cfg.get('pages') or {}).get(page) or cfg['widths']))
+    ws = sorted(map(int, (cfg.get('pages') or {}).get(page) or page_widths(cfg, page)))
     return ws[len(ws) // 2]
 
 
@@ -166,7 +190,9 @@ def child_key(parent, child):
 
 
 def find(frame, path):
-    """Resolve a path; node names may themselves contain ' / ', so parts are joined greedily."""
+    """Resolve a path; node names may themselves contain ' / ', so parts are joined greedily. "." is the page frame."""
+    if path.strip() == '.':
+        return frame
     def rec(node, parts):
         if not parts:
             return node
@@ -251,11 +277,20 @@ def fill_row_columns(node):
     return ' '.join(tracks)
 
 
+def invisible_outline(style):
+    o = style.get('outline', '').lower()
+    return 'transparent' in o or bool(re.search(r'#[0-9a-f]{6}00\b', o)) or o.startswith(('0px', 'none'))
+
+
 def css(node, flags, asset_url):
     out = []
     for k, v in node.style.items():
         if k in DROP:
             continue
+        if 'paint' in flags and not (k in PAINT or k.startswith(('outline', 'text-decoration'))):
+            continue  # a state rule (hover, focus) from a state board: colours only, the box stays the element's own
+        if 'paint' in flags and k.startswith('outline') and invisible_outline(node.style):
+            continue  # Pencil exports every stroke as outline; a transparent one would hide the keyboard focus ring
         if 'img' in flags and k.startswith('background-'):
             if k == 'background-size':
                 out.append(f'object-fit: {"contain" if v == "contain" else "cover"}')
@@ -269,15 +304,18 @@ def css(node, flags, asset_url):
             continue  # fill_container: the exporter also writes a px width; the track decides
         if 'text' in flags and k in ('height', 'width') and v.endswith('px'):
             continue
+        if 'box' in flags and k == 'height' and v.endswith('px'):
+            out.append(f'min-height: {v}')  # designer's text box: keep its px size, let longer text grow
+            continue
         if k == 'box-sizing':
             continue
         v = re.sub(r"url\('([^'/]*)'\)", lambda m: f"url('{asset_url}{m.group(1)}')", v)
         out.append(f'{k}: {v}')
     if any(x.startswith('width: ') and x.endswith('px') for x in out) and node.style.get('position') != 'absolute':
         out.append('max-width: 100%')  # a design px width never pushes past its container
-    if node.style.get('flex', '').startswith('1 1 0'):
+    if node.style.get('flex', '').startswith('1 1 0') and 'paint' not in flags:
         out.append('min-width: 0')  # Pencil fill_container ignores content size
-    columns = fill_row_columns(node)
+    columns = None if 'paint' in flags else fill_row_columns(node)  # a state rule never changes the layout
     if columns:
         out.append(f'display: grid; grid-template-columns: {columns}')
         if node.style.get('height', '').endswith('px'):
@@ -294,25 +332,29 @@ def section_entry(cfg, map_file):
 def build(cfg, map_file, out=None):
     spec = json.loads(Path(map_file).read_text(encoding='utf-8'))
     entry = section_entry(cfg, map_file)
-    out = Path(out or (entry and entry.get('css')) or Path(cfg['cssDir']) / (Path(map_file).name.replace('.map.json', '.generated.css')))
+    out = Path(out or (entry and entry.get('css')) or Path(cfg['cssDir'].replace('{page}', spec['page'])) / (Path(map_file).name.replace('.map.json', '.generated.css')))
     # A map may set its own "widths" {width: media}: a part drawn at fewer widths (a top bar at 1920 and 390
     # only) covers the whole range with them. Widths the page was not drawn at are skipped.
-    widths = spec.get('widths') or cfg['widths']
+    media = spec.get('widths') or page_widths(cfg, spec['page'])
     drawn = (cfg.get('pages') or {}).get(spec['page'])
-    frames = {}
+    media = {w: mq for w, mq in media.items() if not drawn or int(w) in drawn}
+    # "files": one export holding several widths (a designer's state board) — {"*": "board.html"} or per width.
+    files = spec.get('files', {})
+    frames = {w: load(files.get(str(w), files.get('*')) or export_file(cfg, spec['page'], w), cfg['nameAttr']) for w in media}
     lines = [f'/* GENERATED by design-transfer from {Path(cfg["package"]).name}/{spec["page"]}-*.html'
              f' with {Path(map_file).name}. Do not edit; put fluid/state overrides in a separate file. */']
     missing = []
-    for w, mq in widths.items():
-        if drawn and int(w) not in drawn:
-            continue
-        frames[w] = load(export_file(cfg, spec['page'], w), cfg['nameAttr'])
+    for w, mq in media.items():
         lines.append(f'@media {mq}{{')
         for sel, path, *flags in spec['rules']:
             p = path if isinstance(path, str) else path.get(str(w), path.get('*'))
             if p is None:
                 continue
-            node = find(frames[w], p)
+            src = w
+            if p.startswith('@') and ':' in p:  # "@1024:path" — the node of another width (a state drawn only there)
+                src, p = p[1:].split(':', 1)
+                frames.setdefault(src, load(files.get(src, files.get('*')) or export_file(cfg, spec['page'], src), cfg['nameAttr']))
+            node = find(frames[src], p)
             if node is None:
                 missing.append(f'{w}: {sel} <- {p}')
                 continue
@@ -444,7 +486,7 @@ def cmd_scaffold(name, block, page=None):
     rec(sec, sec.name, 0, True)
     # Other widths may nest a node differently (a card row becomes a column with an extra wrapper):
     # find it there by name and write a per-width path.
-    for w in cfg['widths']:
+    for w in page_widths(cfg, page):
         if int(w) == width:
             continue
         frame = load(export_file(cfg, page, w), cfg['nameAttr'])
@@ -459,7 +501,7 @@ def cmd_scaffold(name, block, page=None):
             rule[1] = {'*': path, **({} if isinstance(rule[1], str) else rule[1]), w: alt}
             if alt is None:  # null in the map: the node does not exist at this width — hide it there in your CSS
                 print(f'absent at {w}: {rule[0]} ({path})', file=sys.stderr)
-    out = Path(cfg['mapsDir'])
+    out = Path(cfg['mapsDir'].replace('{page}', page))  # "{page}" in mapsDir/cssDir: one folder per page
     out.mkdir(parents=True, exist_ok=True)
     map_file, skel = out / f'{block}.map.json', out / f'{block}.skeleton.html'
     if map_file.exists():
@@ -493,17 +535,24 @@ def cmd_prepare_ref():
     """Copy of the export that renders offline and like Pencil: assets next to the HTML, local fonts,
     border-box sizing (Pencil sizes include padding and border), fill rows split by outer size."""
     cfg = config()
-    pkg, out = Path(cfg['package']), Path(cfg['refDir'])
+    out = Path(cfg['refDir'])
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
-    for z in pkg.glob('*.zip'):
-        zipfile.ZipFile(z).extractall(out)
-    for d in ('assets', 'images', 'renders', 'fonts'):
-        if (pkg / d).is_dir():
-            shutil.copytree(pkg / d, out / d, dirs_exist_ok=True)
-    for c in pkg.glob('*.css'):  # an export with local fonts links ./fonts.css next to the pages
-        shutil.copy(c, out / c.name)
+    for pkg in packages(cfg):  # newer packages overwrite files of older ones
+        for z in pkg.glob('*.zip'):
+            zipfile.ZipFile(z).extractall(out)
+        # Fixed asset folders plus any top folder the export references (url('history-materials/…'), src="media/…").
+        dirs = {'assets', 'images', 'renders', 'reference', 'fonts'}
+        for f in pkg.glob('*.html'):
+            dirs |= set(re.findall(r'''(?:url\(\s*['"]?|src=["'])(?!https?:|data:|/)([^/'"()\s]+)/''', f.read_text(encoding='utf-8')))
+        for d in sorted(dirs):
+            if (pkg / d).is_dir():
+                shutil.copytree(pkg / d, out / d, dirs_exist_ok=True)
+        for f in pkg.iterdir():
+            # Pictures next to the pages; an export with local fonts links ./fonts.css next to the pages.
+            if f.is_file() and f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif', '.css'):
+                shutil.copy(f, out / f.name)
     faces = []
     for family, file in cfg.get('fonts', {}).items():
         f = Path(file)
@@ -511,7 +560,7 @@ def cmd_prepare_ref():
             sys.exit(f'font file for {family} not found: {f} (set "fonts" in design-transfer.json)')
         shutil.copy(f, out / f.name)
         faces.append(f'@font-face{{font-family:"{family}";src:url("{f.name}");font-weight:100 900}}')
-    for f in pkg.glob('*.html'):
+    for f in (f for pkg in packages(cfg) for f in pkg.glob('*.html')):
         s = f.read_text(encoding='utf-8')
         if faces:
             s = re.sub(r'<link\s+href="https://fonts.googleapis[^>]*/?>', '<style>' + ''.join(faces) + '</style>', s, flags=re.S)

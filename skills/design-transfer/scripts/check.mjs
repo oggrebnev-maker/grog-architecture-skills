@@ -4,30 +4,36 @@
 // Per section/width: size of our block vs the export node, pixel diff %, export texts missing on our page.
 // Pictures: <outDir>/<key>-<width>-{cur,ref,diff}.png. Summary: <outDir>/report.json. Exit 1 on failure.
 import { writeFileSync } from 'node:fs';
-import { config, sectionOf, browser, open, refUrl, widths, diffPng } from './lib.mjs';
+import { config, sectionOf, atWidth, markNode, browser, open, refUrl, widths, diffPng } from './lib.mjs';
 
 const cfg = config();
 const args = process.argv.slice(2);
 const only = args.filter(a => !a.startsWith('--'));
-const ws = (args.find(a => a.startsWith('--widths='))?.slice(9).split(',').map(Number)) ?? widths(cfg);
-const sections = cfg.sections.filter(s => !only.length || only.includes(s.key)).map(sectionOf);
+const only_ws = args.find(a => a.startsWith('--widths='))?.slice(9).split(',').map(Number);
+// "check": false — a map built from a state board (no page export to compare with).
+const sections = cfg.sections.filter(s => s.check !== false && (!only.length || only.includes(s.key))).map(sectionOf);
 if (!sections.length) { console.error('no sections: list them in design-transfer.json "sections"'); process.exit(2); }
 
 const b = await browser();
 const report = [];
 let failed = false;
-const textsOf = el => [...el.querySelectorAll('*')].concat(el)
+const textsOf = el => [...el.querySelectorAll('*')].concat(el).filter(n => n.getClientRects().length) // hidden nodes (refCss) are not expected
   .flatMap(n => [...n.childNodes].filter(c => c.nodeType === 3).map(c => c.textContent.replace(/\s+/g, ' ').trim()))
   .filter(Boolean);
 for (const s of sections) {
-  for (const w of ws) {
+  for (const w of only_ws?.filter(x => widths(cfg, s.page).includes(x)) ?? widths(cfg, s.page)) {
     const row = { section: s.key, width: w };
     const shots = {};
-    for (const [tag, url, sel, css] of [['cur', cfg.preview + s.url, s.selector, cfg.injectCss ?? ''], ['ref', refUrl(cfg, s.page, w), `[${cfg.nameAttr}="${s.node}"]`, '']]) {
-      const p = await open(b, url, w, css);
+    const node = atWidth(s.node, w);
+    if (node === null) continue; // the block does not exist at this width of the export
+    for (let [tag, url, sel, css, init] of [['cur', cfg.preview + s.url, atWidth(s.selector, w), cfg.injectCss ?? '', s.init ?? cfg.initScript ?? ''], ['ref', refUrl(cfg, s.page, w), null, s.refCss ?? '', '']]) {
+      const p = await open(b, url, w, css, 1000, init);
+      if (tag === 'cur' && s.wait) await p.locator(s.wait).first().waitFor({ timeout: 10000 }).catch(() => {});
+      if (tag === 'ref') sel = await markNode(p, cfg, node);
       const el = p.locator(sel).first();
       if (!(await el.count())) { row.error = `${tag}: ${sel} not found`; await p.close(); break; }
       const box = await el.boundingBox();
+      if (!box) { row.error = `${tag}: ${sel} is not displayed`; await p.close(); break; }
       shots[tag] = { file: `${cfg.outDir}/${s.key}-${w}-${tag}.png`, w: Math.round(box.width), h: Math.round(box.height) };
       await el.screenshot({ path: shots[tag].file });
       shots[tag].texts = await el.evaluate((e, f) => new Function('return ' + f)()(e), textsOf.toString());

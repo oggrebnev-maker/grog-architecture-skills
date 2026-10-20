@@ -1,17 +1,5 @@
 // Shared helpers of the browser checks: config, browser, image comparison in a canvas (no extra deps).
-import { createRequire } from 'node:module';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-// Playwright lives outside the plugin folder (it is replaced on every plugin update): setup.sh installs it here.
-export const DT_HOME = process.env.DESIGN_TRANSFER_HOME ?? join(homedir(), '.local/share/design-transfer');
-function loadPlaywright() {
-  for (const base of [DT_HOME, fileURLToPath(new URL('..', import.meta.url))]) {
-    try { return createRequire(join(base, 'package.json'))('playwright'); } catch {}
-  }
-  throw new Error(`Playwright не установлен: bash <папка навыка>/setup.sh (ставит в ${DT_HOME})`);
-}
-const { chromium } = loadPlaywright();
+import { chromium } from './pw.mjs';
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -25,6 +13,7 @@ export function config() {
   c.thresholds = { sizePx: 1, diffPct: 3, ...(c.thresholds ?? {}) };
   c.sections ??= [];
   mockFile = c.mock ?? null;
+  if (process.env.DT_PREVIEW) c.preview = process.env.DT_PREVIEW;  // a second preview (parallel worktree) on its own port
   mkdirSync(c.outDir, { recursive: true });
   return c;
 }
@@ -33,8 +22,35 @@ export function config() {
 export function sectionOf(entry) {
   const spec = JSON.parse(readFileSync(entry.map, 'utf8'));
   const [selector, path] = spec.rules[0];
-  const node = typeof path === 'string' ? path : path['*'] ?? Object.values(path)[0];
-  return { key: entry.key, page: entry.page ?? spec.page, url: entry.url ?? '/', selector: entry.selector ?? selector, node: entry.node ?? node };
+  return { key: entry.key, page: entry.page ?? spec.page, url: entry.url ?? '/', selector: entry.selector ?? selector, node: entry.node ?? path, init: entry.init, wait: entry.wait, refCss: entry.refCss };
+}
+
+/** A section field may differ per width: "value" or {"*": "value", "768": "other"} (a block placed elsewhere at 768). */
+export function atWidth(v, w) {
+  return typeof v === 'string' ? v : v?.[String(w)] !== undefined ? v[String(w)] : v?.['*'] ?? Object.values(v ?? {})[0];
+}
+
+/** Marks the export node at path "A / B / C" with data-dt-target and returns that selector. Node names may
+ * themselves contain " / ", so each step takes the longest run of segments that names a descendant. */
+export async function markNode(page, cfg, path) {
+  const found = await page.evaluate(([attr, parts]) => {
+    let scope = [document.documentElement], i = 0;
+    while (i < parts.length) {
+      let next = null, step = 0;
+      for (let k = parts.length; k > i && !next; k--) {
+        const name = parts.slice(i, k).join(' / ');
+        for (const root of scope) {
+          next = [...root.querySelectorAll(`[${attr}]`)].find(n => n.getAttribute(attr) === name);
+          if (next) { step = k - i; break; }
+        }
+      }
+      if (!next) return false;
+      scope = [next]; i += step;
+    }
+    scope[0].setAttribute('data-dt-target', '');
+    return true;
+  }, [cfg.nameAttr, path.split(' / ').map(n => n.replace(/#\d+$/, ''))]);
+  return found ? '[data-dt-target]' : `node "${path}"`;
 }
 
 export async function browser() {
@@ -46,12 +62,13 @@ export async function browser() {
 // "mock": a module whose default export (page) => Promise stubs the site's server answers (page.route),
 // for pages that show nothing without data. Applied to our pages only, not to the export.
 let mockFile = null, mockFn = null;
-export async function open(b, url, width, css = '', height = 1000) {
+export async function open(b, url, width, css = '', height = 1000, init = '') {
   const p = await b.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
   if (mockFile && !url.startsWith('file:')) {
     mockFn ??= (await import(pathToFileURL(resolve(mockFile)).href)).default;
     await mockFn(p);
   }
+  if (init) await p.addInitScript(init); // e.g. a signed-in preview or an accepted cookie banner: runs before the page's own scripts
   await p.goto(url, { waitUntil: 'networkidle' });
   if (css) await p.addStyleTag({ content: css });
   await p.evaluate(async () => {
@@ -62,7 +79,13 @@ export async function open(b, url, width, css = '', height = 1000) {
 }
 
 export const refUrl = (cfg, page, width) => 'file://' + resolve(cfg.refDir, `${page}-${width}.html`);
-export const widths = cfg => Object.keys(cfg.widths).map(Number).sort((a, b) => b - a);
+/** Design widths of a page: "pageMedia" (glob keys, e.g. "settings-*") or the site-wide "widths". */
+export const pageMedia = (cfg, page) => {
+  const glob = p => new RegExp('^' + p.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+  const hit = page && Object.entries(cfg.pageMedia ?? {}).find(([p]) => glob(p).test(page));
+  return hit ? hit[1] : cfg.widths;
+};
+export const widths = (cfg, page) => Object.keys(pageMedia(cfg, page)).map(Number).sort((a, b) => b - a);
 
 /** Pixel diff of two PNG files in a canvas page. Returns {sizes, pct, bands:[[y,%]]} and writes out.png. */
 export async function diffPng(b, a, c, out, band = 100) {
