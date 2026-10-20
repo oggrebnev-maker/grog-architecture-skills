@@ -110,6 +110,12 @@ class GuardTest(unittest.TestCase):
         page.write_text('<div style={{ a: 1 }} />\n<div style={{ b: 2 }} />\n')  # a second one in the same file is new
         self.assertEqual(self.run_guard('code')[0], 2)
 
+    def test_missing_system_file_from_settings_fails(self):
+        self.config({'guard': {'tokens': 'нет.json'}})
+        code, out = self.run_guard('package', 'pkg')
+        self.assertNotEqual(code, 0)
+        self.assertIn('нет.json', out)
+
     def test_system_prints_palette_by_theme(self):
         code, out = self.run_guard('system', 'pkg')
         s = json.loads(out)

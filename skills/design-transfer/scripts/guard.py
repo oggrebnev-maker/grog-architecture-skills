@@ -86,6 +86,10 @@ def load_system(pkg: Path):
     used = []
     typo = [pkg / 'typography.json'] if pkg else []
     typo += [Path(t) for t in ([g['tokens']] if isinstance(g.get('tokens'), str) else g.get('tokens', []))]
+    named = typo[1:] + [Path(v) for v in g.get('variables', [])]
+    missing = [str(p) for p in named if not p.exists()]
+    if missing:  # a file named in the settings must exist: without it the check would pass on half a system
+        sys.exit('guard: нет файлов системы из настроек: ' + ', '.join(missing))
     for p in typo:
         if p.exists():
             add_system(system, json.loads(p.read_text(encoding='utf-8')))
