@@ -543,6 +543,7 @@ def cmd_package(argv):
         head = cfg().get('guard', {}).get('syncHeader', '## Разработчик → Дизайнер · {date} · {package}: несоответствие дизайн-системе')
         with sync.open('a', encoding='utf-8') as f:
             f.write('\n' + head.format(date=date.today().strftime('%d.%m.%Y'), package=pkg.name) + f'\n\n{md}\n\n'
+                    f'Эталон — дизайн-система ({tokens}): размеры текста, межстрочный, толщину и цвета брать только из неё. '
                     'Прошу исправить в макете и прислать пакет заново.\n')
     return 2 if rep.severe() else 1
 
