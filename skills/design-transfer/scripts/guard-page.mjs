@@ -42,7 +42,12 @@ const found = [];
 for (const path of pages) {
   for (const theme of themes) {
   for (const w of WIDTHS) {
-    const p = await open(b, cfg.preview + path, w, '', 900, theme.init ?? '');
+    // One retry: a dropped connection (ERR_NETWORK_CHANGED on the stand) is not a finding.
+    const p = await open(b, cfg.preview + path, w, '', 900, theme.init ?? '').catch(() => open(b, cfg.preview + path, w, '', 900, theme.init ?? ''));
+    // Measure the styled page: every stylesheet applied (a slow one leaves browser defaults: 32/normal, #767676 borders).
+    await p.waitForFunction(() => document.readyState === 'complete'
+      && [...document.querySelectorAll('link[rel="stylesheet"]')].every(l => l.sheet), null, { timeout: 15000 }).catch(() => {});
+    if (g.wait) await p.locator(g.wait).first().waitFor({ timeout: 10000 }).catch(() => {});
     const items = await p.evaluate((skip) => {
       // #RRGGBB, or #RRGGBBAA when translucent — the palette's form.
       const hex = c => {
